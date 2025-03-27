@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>镜像翻转工具</title>
+    <link rel="stylesheet" href="./css/rf.css">
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #2ecc71;
+            --light: #f8f9fa;
+            --border-radius: 8px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            line-height: 1.6;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <h1>📸 镜像翻转工具</h1>
+        <p>创建专业的镜像效果，实时预览</p>
+    </div>
+
+    <div class="controls-panel">
+        <div class="file-input">
+            <label for="imageUpload" class="file-input-button">
+                📂 选择图片
+            </label>
+            <input type="file" id="imageUpload" accept="image/*">
+        </div>
+
+        <div class="control-group">
+            <label>镜像位置</label>
+            <select id="position" class="range-slider">
+                <option value="below">底部</option>
+                <option value="above">顶部</option>
+                <option value="left">左侧</option>
+                <option value="right">右侧</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>选择模式
+                <div class="tooltip">
+                    <span class="tooltip-icon">?</span>
+                    <span class="tooltip-content">框选图片的特定区域应用镜像效果。不选择则对整张图片应用效果。</span>
+                </div>
+            </label>
+            <div>
+                <button id="startSelect">开始框选</button>
+                <button id="cancelSelect" disabled>取消选择</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>偏移量</label>
+            <div style="display: flex; align-items: center; width: 100%;">
+                <input type="range" id="offset" min="0" max="100" value="20" class="range-slider">
+                <span id="offsetValue" class="range-value">20px</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>透明度</label>
+            <div style="display: flex; align-items: center; width: 100%;">
+                <input type="range" id="opacity" min="0" max="100" value="50" class="range-slider">
+                <span id="opacityValue" class="range-value">50%</span>
+            </div>
+        </div>
+
+        <button id="save" class="action-button" disabled>💾 保存图片</button>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+        <div id="selectionBox"></div>
+        <div class="loading"></div>
+    </div>
+    <script src="./js/rf.js"></script>
+    <script>
+
+        // 参数变化监听
+        document.getElementById('position').addEventListener('change', function() {
+            updateMaxOffset();
+            drawImage();
+        });
+        
+        document.getElementById('offset').addEventListener('input', function() {
+            offsetValue.textContent = `${this.value}px`;
+            drawImage();
+        });
+        
+        document.getElementById('opacity').addEventListener('input', function() {
+            opacityValue.textContent = `${this.value}%`;
+            drawImage();
+        });
+
+        // 重置选区
+        function resetSelection() {
+            selection = null;
+            selectionBox.style.display = 'none';
+            document.getElementById('startSelect').disabled = false;
+            document.getElementById('cancelSelect').disabled = true;
+            updateMaxOffset();
+        }
+
+        // 保存图片
+        document.getElementById('save').addEventListener('click', function() {
+            if (!originalImage) return;
+            
+            // 绘制图像但不显示选区边框
+            drawImage(false);
+            
+            // 创建下载链接
+            const link = document.createElement('a');
+            link.download = 'mirror-flip-' + new Date().getTime() + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            // 重新绘制图像并显示选区边框（恢复预览状态）
+            drawImage(true);
+        });
+
+        // 窗口调整大小时重新绘制
+        window.addEventListener('resize', function() {
+            if (originalImage) {
+                drawImage();
+            }
+        });
+    </script>
+</body>
+</html>
